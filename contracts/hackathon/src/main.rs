@@ -43,12 +43,12 @@ enum Error {
     CannotUseAsInput,
     MultipleOutputs,
     DataLengthNotEnough,
-    IdentifierNotMatch
+    //IdentifierNotMatch
 }
 
 const SYMBOL_LEN: usize = 8;
 const DECIMAL_LEN: usize = 1;
-const IDENTIFY_HASH: [u8; 32] = [93, 183, 91, 247,  12,  20,  25,   7,108, 209, 71, 104,  84, 242,  13, 209, 154, 230, 75, 255, 134, 147, 224,  95, 92, 234, 96, 149, 157,  84,  47,   4];
+//const IDENTIFY_HASH: [u8; 32] = [93, 183, 91, 247,  12,  20,  25,   7,108, 209, 71, 104,  84, 242,  13, 209, 154, 230, 75, 255, 134, 147, 224,  95, 92, 234, 96, 149, 157,  84,  47,   4];
 //
 //93, 183, 91, 247,  12,  20,  25,   7,108, 209, 71, 104,  84, 242,  13, 209, 154, 230, 75, 255, 134, 147, 224,  95, 92, 234, 96, 149, 157,  84,  47,   4
 //always_success lock hash
@@ -94,10 +94,13 @@ fn check_data_length() -> Result<bool, Error> {
     Ok(data.len() > SYMBOL_LEN + DECIMAL_LEN)
 }
 
+/*
 fn check_identifier_args() -> Result<bool, Error> {
     let lock_hash = load_cell_lock_hash(0, Source::GroupOutput).unwrap();
     Ok(lock_hash == IDENTIFY_HASH)
 }
+
+ */
 
 fn main() -> Result<(), Error> {
     let script = load_script()?;
@@ -127,9 +130,11 @@ fn main() -> Result<(), Error> {
         return Err(Error::DataLengthNotEnough);
     }
 
+    /*
     if !check_identifier_args()? {
         return Err(Error::IdentifierNotMatch);
     }
+     */
 
     Ok(())
 }

@@ -196,10 +196,12 @@ fn test_short_data_length() {
 }
 
 #[test]
-fn test_invalid_identifier() {
+fn test_invalid_identifier_do_not_matter() {
     let (mut context, tx) = build_test_context(false, false, true, true, true, false);
     let tx = context.complete_tx(tx);
 
-    let err = context.verify_tx(&tx, MAX_CYCLES).unwrap_err();
-    assert_error_eq!(err, ScriptError::ValidationFailure(IDENTIFIER_NOT_MATCH));
+    let cycles = context
+        .verify_tx(&tx, MAX_CYCLES)
+        .expect("should success");
+    println!("cycles: {}", cycles);
 }

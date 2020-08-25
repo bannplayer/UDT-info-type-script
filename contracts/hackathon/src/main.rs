@@ -42,17 +42,11 @@ enum Error {
     NotOwner,
     CannotUseAsInput,
     MultipleOutputs,
-    DataLengthNotEnough,
-    //IdentifierNotMatch
+    DataLengthNotEnough
 }
 
 const SYMBOL_LEN: usize = 8;
 const DECIMAL_LEN: usize = 1;
-//const IDENTIFY_HASH: [u8; 32] = [93, 183, 91, 247,  12,  20,  25,   7,108, 209, 71, 104,  84, 242,  13, 209, 154, 230, 75, 255, 134, 147, 224,  95, 92, 234, 96, 149, 157,  84,  47,   4];
-//
-//93, 183, 91, 247,  12,  20,  25,   7,108, 209, 71, 104,  84, 242,  13, 209, 154, 230, 75, 255, 134, 147, 224,  95, 92, 234, 96, 149, 157,  84,  47,   4
-//always_success lock hash
-//8, 142, 54, 93, 30, 19, 242, 26, 170, 49, 221, 68, 22, 77, 231, 167, 164, 85, 230, 41, 131, 114, 38, 229, 3, 201, 92, 8, 198, 34, 61, 7
 
 impl From<SysError> for Error {
     fn from(err: SysError) -> Self {
@@ -72,9 +66,9 @@ fn count_group_input() -> Result<bool, Error> {
     Ok(zero_input)
 }
 
-fn count_group_output() -> Result<bool, Error> {
-    let one_output = load_cell_lock_hash(0, Source::GroupOutput).is_ok() && load_cell_lock_hash(1, Source::GroupOutput).is_err();
-    Ok(one_output)
+fn count_group_output() -> Result<(bool, usize), Error> {
+    let first_output_data = load_cell_data(0, Source::GroupOutput);
+    Ok((first_output_data.is_ok() && load_cell_data(1, Source::GroupOutput).is_err(), first_output_data.unwrap().len()))
 }
 
 fn find_udt_cell_idx(args: &Bytes) -> Result<Option<usize>, Error> {
@@ -89,18 +83,9 @@ fn check_owner_mode(args: &Bytes) -> Result<bool, Error> {
     Ok(is_owner_mode)
 }
 
-fn check_data_length() -> Result<bool, Error> {
-    let data = load_cell_data(0, Source::GroupOutput).unwrap();
-    Ok(data.len() > SYMBOL_LEN + DECIMAL_LEN)
+fn check_data_length(group_output_data: usize) -> Result<bool, Error> {
+    Ok(group_output_data > SYMBOL_LEN + DECIMAL_LEN)
 }
-
-/*
-fn check_identifier_args() -> Result<bool, Error> {
-    let lock_hash = load_cell_lock_hash(0, Source::GroupOutput).unwrap();
-    Ok(lock_hash == IDENTIFY_HASH)
-}
-
- */
 
 fn main() -> Result<(), Error> {
     let script = load_script()?;
@@ -110,7 +95,9 @@ fn main() -> Result<(), Error> {
         return Err(Error::CannotUseAsInput);
     }
 
-    if !count_group_output()? {
+    let (group_output_is_ok, group_output_data) = count_group_output()?;
+
+    if !group_output_is_ok {
         return Err(Error::MultipleOutputs);
     }
 
@@ -126,15 +113,9 @@ fn main() -> Result<(), Error> {
         return Err(Error::NotOwner);
     }
 
-    if !check_data_length()? {
+    if !check_data_length(group_output_data)? {
         return Err(Error::DataLengthNotEnough);
     }
-
-    /*
-    if !check_identifier_args()? {
-        return Err(Error::IdentifierNotMatch);
-    }
-     */
 
     Ok(())
 }

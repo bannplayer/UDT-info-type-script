@@ -15,15 +15,13 @@ const NOT_OWNER: i8 = 6;
 const CANNOT_USE_AS_INPUT: i8 = 7;
 const MULTIPLE_OUTPUTS: i8 = 8;
 const DATA_LENGTH_NOT_ENOUGH: i8 = 9;
-const IDENTIFIER_NOT_MATCH: i8 = 10;
 
 fn build_test_context(
     group_input: bool,
     group_output: bool,
     can_find_udt: bool,
     is_owner_mode: bool,
-    data_length: bool,
-    correct_identifier: bool,
+    data_length: bool
 ) -> (Context, TransactionView) {
     let mut context = Context::default();
     let contract_bin: Bytes = Loader::default().load_binary("hackathon");
@@ -31,11 +29,7 @@ fn build_test_context(
 
     let always_success_out_point = context.deploy_contract(ALWAYS_SUCCESS.clone());
 
-    let lock_script_args = if correct_identifier {
-        Default::default()
-    } else {
-        [0u8; 32].to_vec().into()
-    };
+    let lock_script_args = Default::default();
 
     let lock_script = context
         .build_script(&always_success_out_point, lock_script_args)
@@ -141,7 +135,13 @@ fn build_test_context(
 
 #[test]
 fn test_success() {
-    let (mut context, tx) = build_test_context(false, false, true, true, true, true);
+    let (mut context, tx) = build_test_context(
+        false,
+        false,
+        true,
+        true,
+        true
+    );
     let tx = context.complete_tx(tx);
 
     let cycles = context
@@ -152,7 +152,13 @@ fn test_success() {
 
 #[test]
 fn test_group_input() {
-    let (mut context, tx) = build_test_context(true, false, true, true, true, true);
+    let (mut context, tx) = build_test_context(
+        true,
+        false,
+        true,
+        true,
+        true
+    );
     let tx = context.complete_tx(tx);
 
     let err = context.verify_tx(&tx, MAX_CYCLES).unwrap_err();
@@ -161,7 +167,13 @@ fn test_group_input() {
 
 #[test]
 fn test_multiple_group_output() {
-    let (mut context, tx) = build_test_context(false, true, true, true, true, true);
+    let (mut context, tx) = build_test_context(
+        false,
+        true,
+        true,
+        true,
+        true
+    );
     let tx = context.complete_tx(tx);
 
     let err = context.verify_tx(&tx, MAX_CYCLES).unwrap_err();
@@ -170,7 +182,13 @@ fn test_multiple_group_output() {
 
 #[test]
 fn test_cannot_find_udt() {
-    let (mut context, tx) = build_test_context(false, false, false, true, true, true);
+    let (mut context, tx) = build_test_context(
+        false,
+        false,
+        false,
+        true,
+        true
+    );
     let tx = context.complete_tx(tx);
 
     let err = context.verify_tx(&tx, MAX_CYCLES).unwrap_err();
@@ -179,7 +197,13 @@ fn test_cannot_find_udt() {
 
 #[test]
 fn test_not_owner_of_udt() {
-    let (mut context, tx) = build_test_context(false, false, true, false, true, true);
+    let (mut context, tx) = build_test_context(
+        false,
+        false,
+        true,
+        false,
+        true
+    );
     let tx = context.complete_tx(tx);
 
     let err = context.verify_tx(&tx, MAX_CYCLES).unwrap_err();
@@ -188,20 +212,15 @@ fn test_not_owner_of_udt() {
 
 #[test]
 fn test_short_data_length() {
-    let (mut context, tx) = build_test_context(false, false, true, true, false, true);
+    let (mut context, tx) = build_test_context(
+        false,
+        false,
+        true,
+        true,
+        false
+    );
     let tx = context.complete_tx(tx);
 
     let err = context.verify_tx(&tx, MAX_CYCLES).unwrap_err();
     assert_error_eq!(err, ScriptError::ValidationFailure(DATA_LENGTH_NOT_ENOUGH));
-}
-
-#[test]
-fn test_invalid_identifier_do_not_matter() {
-    let (mut context, tx) = build_test_context(false, false, true, true, true, false);
-    let tx = context.complete_tx(tx);
-
-    let cycles = context
-        .verify_tx(&tx, MAX_CYCLES)
-        .expect("should success");
-    println!("cycles: {}", cycles);
 }

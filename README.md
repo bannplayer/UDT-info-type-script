@@ -1,6 +1,6 @@
 # UDT info type script
 
-Script verifying UDT info cell on-chain as read-only with capsule.
+Script verifying UDT info cell on-chain as read-only with capsule (https://github.com/nervosnetwork/capsule).
 * Only owner of UDT can make the info cell.
 * There can be multiple info cells in different transactions with same UDT. 
   In this situation, Dapps can choose whether the UDT has some problem or not. 
